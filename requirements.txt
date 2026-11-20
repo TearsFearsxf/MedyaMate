@@ -1,0 +1,11 @@
+# MedyaMate — Gerekli Paketler
+yt-dlp>=2024.1.1
+customtkinter>=5.2.1
+Pillow>=10.0.0
+mutagen>=1.47.0
+requests>=2.31.0
+packaging>=23.0
+python-vlc>=3.0
+pystray>=0.19.5
+# İsteğe bağlı (Windows masaüstü bildirimleri için)
+# win10toast>=0.9

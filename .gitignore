@@ -1,0 +1,16 @@
+.venv/
+.venv311/
+__pycache__/
+*.py[cod]
+build/
+dist/
+*.spec.bak
+ffmpeg.exe
+ffprobe.exe
+history.json
+hata_log.txt
+debug_calistir.bat
+*.log
+.env
+.env.*
+!.env.example

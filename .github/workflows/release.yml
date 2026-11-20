@@ -1,0 +1,55 @@
+name: Build and publish MedyaMate
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  windows-release:
+    runs-on: windows-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+
+      - name: Install build requirements
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt pyinstaller
+
+      - name: Install FFmpeg for bundling
+        run: choco install ffmpeg -y --no-progress
+
+      - name: Embed version and repository
+        run: python .github/scripts/prepare_release.py
+        shell: bash
+
+      - name: Bundle FFmpeg
+        shell: pwsh
+        run: |
+          $ffmpeg = Get-ChildItem "$env:ProgramData\chocolatey\lib" -Filter ffmpeg.exe -File -Recurse |
+            Where-Object { $_.FullName -match '\\bin\\ffmpeg\.exe$' -and $_.FullName -notmatch '\\chocolatey\\bin\\' } |
+            Select-Object -First 1
+          if (-not $ffmpeg) { throw 'FFmpeg executable was not found after installation.' }
+          $ffprobe = Join-Path $ffmpeg.DirectoryName 'ffprobe.exe'
+          if (-not (Test-Path $ffprobe)) { throw 'ffprobe.exe was not found next to ffmpeg.exe.' }
+          Copy-Item $ffmpeg.FullName ./ffmpeg.exe
+          Copy-Item $ffprobe ./ffprobe.exe
+
+      - name: Build standalone Windows app
+        run: pyinstaller --noconfirm --clean build.spec
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          generate_release_notes: true
+          files: dist/MedyaMate.exe
